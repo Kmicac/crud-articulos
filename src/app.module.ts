@@ -4,6 +4,7 @@ import { ArticlesModule } from './modules/articles/articles.module';
 import { DatabaseModule } from './modules/database/database.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { AppService } from './app.service';
     DatabaseModule,
     ArticlesModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [AppService],
 })
 export class AppModule {}

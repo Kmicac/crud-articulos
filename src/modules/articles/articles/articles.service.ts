@@ -11,7 +11,7 @@ export class ArticlesService {
   constructor(
     @InjectRepository(Article)
     private readonly articleRepository: Repository<Article>,
-  ) {}
+  ) { }
 
   async create(createArticleDto: CreateArticleDto): Promise<Article> {
     try {
@@ -22,8 +22,18 @@ export class ArticlesService {
     }
   }
 
-  async findAll(queryDto: QueryArticleDto): Promise<Article[]> {
-    const { id, nombre, activo } = queryDto;
+  async findAll(queryDto: QueryArticleDto): Promise<{
+    data: Article[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrevious: boolean;
+    };
+  }> {
+    const { id, nombre, activo, page = 1, limit = 10 } = queryDto;
     const where: any = {};
 
     if (id) {
@@ -35,15 +45,39 @@ export class ArticlesService {
     }
 
     if (activo !== undefined) {
-      where.activo = activo;
+      if (activo === 'true') {
+        where.activo = true;
+      } else if (activo === 'false') {
+        where.activo = false;
+      }
     }
 
-    return await this.articleRepository.find({
+    const offset = (page - 1) * limit;
+
+    const [data, total] = await this.articleRepository.findAndCount({
       where,
       order: {
         fechaModificacion: 'DESC',
       },
+      take: limit,
+      skip: offset,
     });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNext = page < totalPages;
+    const hasPrevious = page > 1;
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext,
+        hasPrevious,
+      },
+    };
   }
 
   async findOne(id: number): Promise<Article> {
